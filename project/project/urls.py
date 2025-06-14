@@ -8,7 +8,8 @@ urlpatterns = [
     path('saler/', include('saler.urls')),
     path('accounts/', include('allauth.urls')),
     path('api/', include('pages.api_urls')),
+    path('test/', lambda request: HttpResponse("Hello StoreHub!")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404 = 'project.views.handel404'
-handler404 = 'project.views.handel500'
+handler500 = 'project.views.handel500'
