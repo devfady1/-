@@ -1,0 +1,514 @@
+{% extends 'pages/base.html' %}
+{% block content %}
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css"
+      rel="stylesheet" />
+    <title>Store Hub | Main</title>
+  </head>
+
+  <body class="light">
+    
+    <div class="container">
+        <div class="welcome-message">
+        {% if user.is_authenticated %}
+          <h3> Welcome , {{ username }}!</h3>
+        {% else %}
+          <h3>Welcome To Our Store</h3>
+        {% endif %}
+      </div>
+    </div>
+
+   <!-- Section One -->
+    <section class="slider">
+  <div class="container">
+    <div class="swiper">
+      <div class="swiper-wrapper">
+        {% for product in products %}
+        <div class="swiper-slide">
+          <a href="#"><img src="{{ product.image.url }}" alt="{{ product.name }}"  onclick="window.location.href='/product/{{ product.id }}/'"/></a>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+  </div>
+    </section>
+
+
+    <!--Section Two-->
+    <section class="offer">
+      <div class="container">
+        <div class="dayOffers">
+          <span class="shape">.</span>
+          <h3>Today's</h3>
+        </div>
+      </div>
+    </section>
+
+  <!--Section There-->
+    <section class="timer">
+    <div class="container">
+      <div class="flex">
+        <h2>FLASH SALES</h2>
+        <div class="dateAndClock">
+          <div class="date">
+            <h3>Days</h3>
+            <h3>Hours</h3>
+            <h3>Minute</h3>
+            <h3>Second</h3>
+          </div>
+          <div class="clock">
+            <h2 class="day">00:</h2>
+            <h2 class="hour">00:</h2>
+            <h2 class="minut">00:</h2>
+            <h2 class="second">00</h2>
+          </div>
+        </div>
+      </div>
+      <div class="mySwiper">
+        <div class="swiper-button-next btn_swip btSwapProNext"></div>
+        <div class="swiper-button-prev btn_swip btSwapProPrev"></div>
+      </div>
+    </div>
+    </section>
+
+  <!--Swiper Section Four-->
+    <section class="pro-div" id="fady">
+    <div class="container">
+      <div class="products mySwiper">
+        <div class="product swiper-wrapper">
+          {% for pro in flash_sales %}
+            <div class="swiper-slide pro">
+              <div class="icons">
+                <div class="sall">
+                  <span class="discount"></span>
+                </div>
+                <div class="icon">
+                  <i class="fa-regular fa-heart" id="iconheart-{{ pro.product.id }}" data-id="{{ pro.product.id }}" onclick="toggleLike({{ pro.product.id }}, this, event)">
+                  </i>
+                                    
+                  <i class="fa-regular fa-eye" onclick="window.location.href='/product/{{ pro.product.id }}/'; return false; {% if pro.product.id in liked_products %}style="color: #9f1239;"{% endif %}"></i>
+                </div>
+              </div>
+
+              <div class="addcart" data-id="{{ pro.product.id }}" onclick="addToCart({{ pro.product.id }})">
+                <div class="text">
+                  <p>Add To Cart</p>
+                </div>
+              </div>
+
+              <div class="img">
+                <a href="/product/{{ pro.product.id }}/" onclick="window.location.href='/product/{{ pro.product.id }}/'; return false;">
+                  <img src="{{ pro.product.image.url }}" alt="{{ pro.product.name }}" />
+                </a>
+              </div>
+
+              <div class="detailes">
+                <h5>{{ pro.product.name }} </h5>
+                <div class="sallery">
+                  <span class="new-sall">${{ pro.new_price }}</span>
+                  <span class="old-sall">${{ pro.old_price }}</span>
+                </div>
+                <div class="stars">
+                  {% with pro.rating|default:0|add:"0" as rating %}
+                      {% for _ in "12345"|make_list %}
+                          {% if forloop.counter <= rating %}
+                              <i class="fa-solid fa-star"></i>
+                          {% else %}
+                              <i class="fa-regular fa-star"></i>
+                          {% endif %}
+                      {% endfor %}
+                  {% endwith %}
+                  <span>({{ pro.rating|default:"0.0"|floatformat:1 }})</span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+        </div>
+      </div>
+    </div>
+    </section>
+    <!--Section Five-->
+    <section class="btnAfterPro">
+      <div class="container">
+        <div class="bttnAllProduct">
+          <a href="{% url 'allproducts' %}">
+            <button>View All Products</button>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!--Section Six-->
+    <section id="browseCat">
+  <div class="container">
+    <div class="browseCat">
+      <div class="categText">
+        <span class="shape">.</span>
+        <h3>Categories</h3>
+      </div>
+      <div class="catbtnswap mySwiper">
+        <h3>Browse By Category</h3>
+        <div class="swiper-button-next btn_swip btnSwapNext"></div>
+        <div class="swiper-button-prev btn_swip BtnSwapPrev"></div>
+      </div>
+    </div>
+
+    <div class="categs mySwiper">
+      <div class="categ swiper-wrapper">
+        {% for category in categories %}
+          <div class="categ swiper-slide">
+            <div class="cat">
+              <a href="/allproducts/?category={{ category.name }}">
+                {% if category.name == "Men's Fashion" %}
+                  <i class="fa-solid fa-person-dress"></i>
+                {% elif category.name == "Women's Fashion" %}
+                  <i class="fa-solid fa-person"></i>
+                {% elif category.name == "Electronics" %}
+                  <i class="fa-solid fa-microchip"></i>
+                {% elif category.name == "Medicine" %}
+                  <i class="fa-solid fa-capsules"></i>
+                {% elif category.name == "Phone - Tablet" %}
+                  <i class="fa-solid fa-mobile-screen-button"></i>
+                {% elif category.name == "Sports - Outdoor" %}
+                  <i class="fa-solid fa-futbol"></i>
+                {% elif category.name == "Fashion - Clothing" %}
+                  <i class="fa-solid fa-shirt"></i>
+                {% elif category.name == "TV - Audio" %}
+                  <i class="fa-solid fa-tv"></i>
+                {% else %}
+                  <i class="fa-solid fa-tags"></i>
+                {% endif %}
+                {{ category.name }}
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+    </section>
+
+
+    <!--Section Seven-->
+    <section class="BestSellingProducts">
+      <div class="container">
+        <div class="top">
+          <div class="shape-text">
+            <span class="shape">.</span>
+            <h5 class="txt">This Month</h5>
+          </div>
+          <div class="bttn">
+            <h4>Top liked Products</h4>
+            <a href="{% url 'allproducts' %}">
+              <button>View All</button>
+            </a>
+          </div>
+        </div>
+    
+        <div class="bttom">
+          {% for product in products %}
+          <div class="pro">
+            <div class="icons">
+              <div class="icon" >
+                <i class="fa-regular fa-heart iconheart" onclick="toggleLike({{ product.id }}, this, event)" {% if product.id in liked_products %}style="color: #9f1239;  "{% endif %}></i>
+                <a href="/product/{{ product.id }}/">
+                  <i class="fa-regular fa-eye"></i>
+                </a>
+              </div>
+            </div>
+    
+            <div class="addcart" data-id="{{ product.id }}" onclick="addToCart({{ product.id }})">
+              <div class="text">
+                <p>Add To Cart</p>
+              </div>
+            </div>
+    
+            <div class="img">
+              <a href="/product/{{ product.id }}/">
+                <img src="{{ product.image.url }}" alt="" />
+              </a>
+            </div>
+    
+            <div class="detailes">
+              <h5>{{ product.name }}</h5>
+              <div class="sallery">
+                <span class="new-sall">${{ product.price }}</span>
+              </div>
+              <div class="stars">
+                {% with product.rating|default:0|add:"0" as rating %}
+                  {% for _ in "12345"|make_list %}
+                    {% if forloop.counter <= rating %}
+                      <i class="fa-solid fa-star"></i>
+                    {% else %}
+                      <i class="fa-regular fa-star"></i>
+                    {% endif %}
+                  {% endfor %}
+                {% endwith %}
+                <span>({{ product.rating|default:"0.0"|floatformat:1 }})</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="banner-section">
+      <div class="container">
+        <div class="banner-text">
+          <h5>Categories</h5>
+          <h1>Enhance Your <br />Music Experience</h1>
+        </div>
+        <div class="image-container">
+          <div class="glow-effect"></div>
+          <img src="{% static 'images/jblSpeacker.png' %}" alt="Speaker" />
+        </div>
+      </div>
+    </section>
+    
+
+    <section class="ourproduct">
+      <div class="container">
+        <div class="ourprotext">
+          <span class="shape">.</span>
+          <p>Our Products</p>
+        </div>
+        <h3>Explore Our Products</h3>
+    
+        <div class="products">
+          {% for product in random_products %}
+            <div class="pro">
+              <div class="icons">
+                <div class="icon">
+                  <i class="fa-regular fa-heart iconheart" onclick="toggleLike({{ product.id }}, this, event)" {% if product.id in liked_products %}style="color: #9f1239;  "{% endif %}></i>
+                    <i class="fa-regular fa-eye" onclick="window.location.href='/product/{{ product.id }}/'"></i>
+                </div>
+              </div>
+        
+              <div class="addcart" onclick="addToCart({{ product.id }})" data-id="{{ product.id }}">
+                <div class="text">
+                  <p>Add To Cart</p>
+                </div>
+              </div>
+        
+              <div class="img">
+                <a href="/product/{{ product.id }}/">
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+                </a>
+              </div>
+        
+              <div class="detailes">
+                <h5>{{ product.name }}</h5>
+                <div class="dis">
+                  <div class="sallery">
+                    <span class="new-sall">${{ product.price }}</span>
+                  </div>
+                  <div class="stars">
+                    {% with product.rating|default:0|add:"0" as rating %}
+                      {% for _ in "12345"|make_list %}
+                        {% if forloop.counter <= rating %}
+                          <i class="fa-solid fa-star"></i>
+                        {% else %}
+                          <i class="fa-regular fa-star"></i>
+                        {% endif %}
+                      {% endfor %}
+                    {% endwith %}
+                    <span>({{ product.rating|default:"0.0"|floatformat:1 }})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <a href="{% url 'allproducts' %}">
+          <button>View All Products</button>
+        </a>
+      </div>
+    </section>
+    
+
+    <!--Section Ten-->
+    <section class="newArrival">
+      <div class="container">
+        <div class="featured">
+          <span class="shape">.</span>
+          <p>Featured</p>
+        </div>
+        <h2>New Arrival</h2>
+        <div class="imges">
+          <div class="leftSideImg">
+            <div>
+              <img src="{% static 'images/PS.png' %}" alt="PlayStation 5" />
+              <h4>PlayStation 5</h4>
+              <p>Black and White version of the PS5 coming out on sale.</p>
+            </div>
+          </div>
+          <div class="RightSideImg">
+            <div class="rightTop">
+              <div>
+                <img src="{% static 'images/ss.jpeg' %}" alt="Women's Collections" />
+                <h4>Women’s Collections</h4>
+                <p>Featured woman collections that give you another vibe.</p>
+              </div>
+            </div>
+            <div class="rightBttom">
+              <div class="rightBttomLeft">
+                <div>
+                  <img src="{% static 'images/speakerAZ.png' %}" alt="Speakers" />
+                  <h4>Speakers</h4>
+                  <p>Amazon wireless speakers</p>
+                </div>
+              </div>
+              <div class="rightBttomRight">
+                <div>
+                  <img src="{% static 'images/gucci.png' %}" alt="Perfume" />
+                  <h4>Perfume</h4>
+                  <p>GUCCI INTENSE OUD EDP</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--Section Eleven-->
+    <section class="features">
+      <div class="container">
+        <div class="f1">
+          <div class="out">
+            <div class="in">
+              <i class="fa-solid fa-truck"></i>
+            </div>
+          </div>
+          <h3>FREE AND FAST DELIVERY</h3>
+          <p>Free delivery for all orders over $140</p>
+        </div>
+        <div class="f2">
+          <div class="out">
+            <div class="in">
+              <i class="fa-solid fa-headphones"></i>
+            </div>
+          </div>
+          <h3>24/7 CUSTOMER SERVICE</h3>
+          <p>Friendly 24/7 customer support</p>
+        </div>
+        <div class="f3">
+          <div class="out">
+            <div class="in">
+              <i class="fa-regular fa-square-check"></i>
+            </div>
+          </div>
+          <h3>MONEY BACK GUARANTEE</h3>
+          <p>We reurn money within 30 days</p>
+        </div>
+      </div>
+    </section>
+    <!--دا للتايمر بيسحب من الباك-->
+    <script>
+      let product = document.querySelectorAll(".swiper-slide.pro");
+      product.forEach((pro) => {
+        let oldP = parseInt(pro.querySelector(".old-sall").textContent.replace("$", ""))
+        let newP = parseInt(pro.querySelector(".new-sall").textContent.replace("$", ""));
+        let disSpan = pro.querySelector(".sall span");
+        let discount = ((oldP - newP) / oldP) * 100;
+        disSpan.textContent = `${Math.round(discount)}%`;
+      });
+      document.addEventListener("DOMContentLoaded", function () {
+        let endTime = "{{ max_time|date:'Y-m-d H:i:s' }}";
+    
+        if (endTime) {
+          endTime = new Date(endTime).getTime();
+    
+          function updateTimer() {
+            let now = new Date().getTime();
+            let timeLeft = endTime - now;
+    
+            if (timeLeft > 0) {
+              let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+              let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+              let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+              let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    
+              document.querySelector(".day").innerHTML = (days < 10 ? "0" : "") + days + ":";
+              document.querySelector(".hour").innerHTML = (hours < 10 ? "0" : "") + hours + ":";
+              document.querySelector(".minut").innerHTML = (minutes < 10 ? "0" : "") + minutes + ":";
+              document.querySelector(".second").innerHTML = (seconds < 10 ? "0" : "") + seconds;
+            } else {
+              document.getElementById("fady").innerHTML = "";
+              document.querySelector(".btnAfterPro").innerHTML = "";
+              document.querySelector(".offer").innerHTML = "";
+              document.querySelector(".timer").innerHTML = "";
+            }
+          }
+    
+          setInterval(updateTimer, 1000);
+          updateTimer();
+        } else {
+          document.querySelector(".timer").innerHTML = "<h2>No Flash Sales Available</h2>";
+          document.getElementById("fady").innerHTML = "";
+        }
+      });
+    </script>
+
+
+
+
+
+
+    <!--دا للايك و الكارت-->
+    <script>
+      function addToCart(productId) {
+        fetch(`/add-to-cart/?product_id=${productId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === "success") {
+              let quantity = data.cart[productId].quantity;
+              alert(`✅ المنتج تم إضافته بنجاح! الكمية الحالية: ${quantity}`);
+              window.location.href = "/cart/";
+            } else {
+              alert("❌ حدث خطأ أثناء الإضافة!");
+            }
+          })
+          .catch(error => console.error('❌ Fetch Error:', error));
+      }
+      
+      function toggleLike(productId, btn, event) {
+        event.preventDefault();
+      
+        fetch(`/toggle-like/${productId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.liked) {
+            btn.classList.add("liked");
+          } else {
+            btn.classList.remove("liked");
+          }
+        })
+        .catch(error => console.error('❌ Error:', error));
+      }
+      </script>
+  </body>
+  
+</html>
+{% endblock content %}

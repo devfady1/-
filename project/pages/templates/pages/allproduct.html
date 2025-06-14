@@ -1,0 +1,152 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+{% block content %}
+<head>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet">
+  
+  <title>Store Hub | Main</title>
+</head>
+
+<body class="light">
+
+  <!-- Filters Section -->
+  <section class="filters container">
+    <div class="filter-options">
+      <h3>Category</h3>
+      {% for category in categories %}
+        <a href="?category={{ category.name }}">
+          <button class="filter-item">{{ category.name }}</button>
+        </a>
+      {% endfor %}
+    </div>
+
+    <div class="filter-options">
+      <h3>Color</h3>
+      {% for color in colors %}
+        <a href="?color={{ color }}">
+          <button class="color-box" style="background-color: {{ color }}; width: 30px; height: 30px; border: 1px solid #ccc; border-radius: 50%; margin: 5px;"></button>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section class="allproduct">
+    {% for product in products %}
+    <div class="Product" id="product-{{ product.id }}">
+      <div class="Icons">
+        <i class="fa-regular fa-heart {% if request.user in product.likes.all %}liked{% endif %}" onclick="toggleLike({{ product.id }}, this)"></i>
+        <i class="fa-regular fa-eye" onclick="window.location.href='/product/{{ product.id }}/'"></i>
+      </div>
+
+      <div class="img">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" onclick="window.location.href='/product/{{ product.id }}/'">
+      </div>
+
+      <div class="Add add-to-cart" data-id="{{ product.id }}">
+        Add to Cart
+      </div>
+
+      <div class="detailes">
+        <h5>{{ product.name }}</h5>
+        <div class="dis">
+          <span class="new-sall">${{ product.price }}</span>
+          <div class="stars">
+            {% for i in "12345" %}
+              {% if product.rating >= forloop.counter %}
+                <i class="fas fa-star"></i> {# نجمة كاملة #}
+              {% elif product.rating >= forloop.counter0|add:"0.5" %}
+                <i class="fas fa-star-half-alt"></i> {# نص نجمة #}
+              {% else %}
+                <i class="far fa-star"></i> {# نجمة فاضية #}
+              {% endif %}
+            {% endfor %}
+            <span>({{ product.rating|floatformat:1 }})</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <button class="pagination-btn" onclick="window.location.href='?page={{ page_obj.previous_page_number }}'">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+    {% else %}
+      <button class="pagination-btn disabled" disabled>
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      <button class="pagination-number {% if page_obj.number == num %}active{% endif %}" onclick="window.location.href='?page={{ num }}'">
+        {{ num }}
+      </button>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <button class="pagination-btn" onclick="window.location.href='?page={{ page_obj.next_page_number }}'">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    {% else %}
+      <button class="pagination-btn disabled" disabled>
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    {% endif %}
+  </div>
+<audio id="likeSound" src="{% static 'sounds/videoplayback.m4a' %}" preload="auto"></audio>
+
+<script>
+  document.querySelectorAll(".add-to-cart").forEach(button => {
+    button.addEventListener("click", function() {
+      let productId = this.dataset.id;
+
+      fetch(`/add-to-cart/?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "success") {
+            let quantity = data.cart[productId].quantity;
+            alert(`✅ المنتج تم إضافته بنجاح! الكمية الحالية: ${quantity}`);
+            window.location.href = "/cart/";
+          } else {
+            alert("❌ حدث خطأ أثناء الإضافة!");
+          }
+        })
+        .catch(error => console.error('❌ Fetch Error:', error));
+    });
+  });
+
+  function toggleLike(productId, btn) {
+    fetch(`/toggle-like/${productId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.liked) {
+        btn.classList.add("liked");
+
+        const likeSound = document.getElementById('likeSound');
+        likeSound.currentTime = 0;
+        likeSound.play();
+      } else {
+        btn.classList.remove("liked");
+      }
+    })
+    .catch(error => console.error('❌ Error:', error));
+  }
+</script>
+
+</body>
+{% endblock %}
