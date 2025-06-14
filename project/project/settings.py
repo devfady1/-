@@ -27,7 +27,9 @@ SECRET_KEY = 'django-insecure-6y!svxc#ynh52$al4&y^ql$u0kyob#s08+033t%oj)7ufui8w)
 DEBUG = False
 ALLOWED_HOSTS = ['storehub-production.up.railway.app']
 
-
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 
 SITE_ID = 1
