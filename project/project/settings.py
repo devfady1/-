@@ -1,16 +1,22 @@
 import os
+import dj_database_url
 from pathlib import Path
 from django.contrib.messages import constants as message_constants
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-6y!svxc#ynh52$al4&y^ql$u0kyob#s08+033t%oj)7ufui8w)'
-DEBUG = False
+# Security Settings
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-6y!svxc#ynh52$al4&y^ql$u0kyob#s08+033t%oj)7ufui8w)')
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = ['*']
 
+# SSL Settings
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
 SITE_ID = 1
 
@@ -35,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # للـ static files في الإنتاج
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -68,11 +75,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
+# Database - يدعم PostgreSQL تلقائياً أو SQLite كـ fallback
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -87,16 +96,21 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# Static Files Settings
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # غيرت من 'static' لـ 'staticfiles'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'project/static')]
 
+# Whitenoise settings for static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media Files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Jazzmin settings (customize as needed)
+# Jazzmin settings
 JAZZMIN_SETTINGS = {
     'copyright': 'FADY ASHRAF',
     'site_title': "STOREHUB",
@@ -116,41 +130,49 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar": "sidebar-dark-primary",
 }
 
+# Authentication
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'fady555555555522@gmail.com'
-EMAIL_HOST_PASSWORD = 'lpbu adms usni fjqv'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'fady555555555522@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'lpbu adms usni fjqv')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# Google OAuth Settings
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'APP': {
-            'client_id': '631760675060-815heqausl09tnmu9vajrc099mk6mnn6.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', '631760675060-815heqausl09tnmu9vajrc099mk6mnn6.apps.googleusercontent.com'),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', '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'),
             'key': ''
         },
         'OAUTH_PKCE_ENABLED': True,
     }
 }
 
+# URL Redirects
 LOGIN_REDIRECT_URL = 'custom_redirect'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 DEFAULT_REDIRECT_URL = 'custom_redirect'
 
+# Django Allauth Settings - محدث للإصدار الجديد
 ACCOUNT_ADAPTER = 'pages.adapters.CustomAccountAdapter'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+
+# استبدال ACCOUNT_AUTHENTICATION_METHOD المهجور
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}  # البديل الجديد
+
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[StoreHub] '
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
@@ -162,11 +184,19 @@ ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_MIN_LENGTH = 4
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
-ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
-SITE_NAME = 'StoreHub'
-SITE_DOMAIN = '127.0.0.1:8000'
 
+# Site Settings - يتغير حسب البيئة
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN', '127.0.0.1:8000')
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
+
+# Site Info
+SITE_NAME = 'StoreHub'
+
+# Social Account Settings
+SOCIALACCOUNT_AUTO_SIGNUP = False
+REDIRECT_URI = f'{ACCOUNT_DEFAULT_HTTP_PROTOCOL}://{SITE_DOMAIN}/accounts/google/login/callback/'
+
+# Messages Framework
 MESSAGE_TAGS = {
     message_constants.DEBUG: 'alert-info',
     message_constants.INFO: 'alert-info',
@@ -175,9 +205,35 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'alert-danger',
 }
 
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-
-SOCIALACCOUNT_AUTO_SIGNUP = False
-REDIRECT_URI = 'http://localhost:8000/accounts/google/login/callback/'
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
