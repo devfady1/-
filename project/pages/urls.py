@@ -4,7 +4,7 @@ from .views import *
 
 urlpatterns = [
     path('', views.custom_redirect_view, name='root'),
-    path('custom-redirect/', views.custom_redirect_view, name='custom_redirect'),
+    #path('custom-redirect/', views.custom_redirect_view, name='custom_redirect'),
     path('index/', views.index, name='index'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact_view, name='contact'),
