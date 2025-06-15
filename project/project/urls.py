@@ -11,5 +11,5 @@ urlpatterns = [
     path('test/', lambda request: HttpResponse("Hello StoreHub!")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-handler404 = 'pages.views.handle404'
-handler500 = 'pages.views.handle500'
+handler404 = handle404  
+handler500 = handle500
